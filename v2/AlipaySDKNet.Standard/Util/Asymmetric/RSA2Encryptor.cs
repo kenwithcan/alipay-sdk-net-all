@@ -1,4 +1,8 @@
-﻿namespace Aop.Api.Util.Asymmetric
+﻿using System;
+using System.Text;
+using Org.BouncyCastle.Security;
+
+namespace Aop.Api.Util.Asymmetric
 {
     /// <summary>
     /// RSA2算法加密器
@@ -13,6 +17,17 @@
         protected override string GetShaType()
         {
             return "SHA256";
+        }
+
+        protected override string DoSign(string content, string charset, string privateKey)
+        {
+            var priKey = PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
+            byte[] data = Encoding.GetEncoding(charset).GetBytes(content);
+            var normalSig = SignerUtilities.GetSigner("SHA256withRSA");
+            normalSig.Init(true, priKey);
+            normalSig.BlockUpdate(data, 0, data.Length);
+            byte[] sign = normalSig.GenerateSignature();
+            return Convert.ToBase64String(sign);
         }
     }
 }
